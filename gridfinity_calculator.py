@@ -1,11 +1,11 @@
-import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
 import io
-from enum import Enum
+
+import matplotlib.pyplot as plt
+import numpy as np
+import streamlit as st
 from jinja2 import Template
 
-UNITS = ["Inches", "Millimeters"]
+UNITS = ["Millimeters", "Inches"]
 
 # Function to convert inches to millimeters if needed
 def convert_to_mm(value, units):
@@ -140,7 +140,7 @@ st.title("Gridfinity Baseplate Layout Calculator - Optimized to Avoid Any 1x Dim
 
 # Dropdowns for units selection
 printer_units = st.selectbox("Select Printer Dimensions Units:", options=UNITS)
-space_units = st.selectbox("Select Area Dimensions Units:", options=UNITS)
+space_units = st.selectbox("Select Area Dimensions Units:", options=UNITS, )
 
 # Inputs with updated labels
 printer_x = st.number_input(f"Printer Max Build Size X ({printer_units}):", value=227 if printer_units == "Millimeters" else 8.94)
@@ -224,8 +224,14 @@ if 'layout' in st.session_state:
                 elif 'Top' in size:
                     fity = 1
 
+            #  Generate the scad script;  For layouts where only "Left" or "Right" in the name, do not pass any y-axis
+            #  padding.  Otherwise, the model will be longer than need be.
+            if 'Left)' in size or 'Right)' in size:
+                scad_code = generate_openscad_code(gridx, gridy, padding_x, 0, fitx, fity)
+            else:
+                scad_code = generate_openscad_code(gridx, gridy, padding_x, padding_y, fitx, fity)
+
             # Download button
-            scad_code = generate_openscad_code(gridx, gridy, padding_x, padding_y, fitx, fity)
             buffer = io.BytesIO()
             buffer.write(scad_code.encode())
             buffer.seek(0)
